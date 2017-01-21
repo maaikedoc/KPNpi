@@ -6,9 +6,9 @@ from gpiozero import LED
 import time
 import pygame #audio
 import RPi.GPIO as GPIO #push button
-import threading
+import sys
 
-TCP_IP = '130.89.130.219' #IP Address to listen on (Should be external ip for the server)
+TCP_IP = '192.168.1.72' #IP Address to listen on (Should be external ip for the server)
 TCP_PORT = 5005 #Port to listen on
 BUFFER_SIZE = 1024  # Normally 1024, but we want fast response, How many characters max should be received per packet
 GPIO.setmode(GPIO.BCM)
@@ -491,7 +491,7 @@ def social2man():
         print("Zal ik vanmiddag even langs komen voor een bakje koffie?")
         pygame.init()
         pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=4096)
-        pygame.mixer.music.load("./Music/2.mp3")
+        pygame.mixer.music.load("./Music/12.mp3")
         while pygame.mixer.music.get_busy():
                 pygame.time.Clock().tick(10)
         pygame.mixer.music.play()
@@ -814,7 +814,14 @@ def sentinal():
                         ledeat.on()
                         time.sleep(10)
                 conn.send(data)  # echo
+        
+def my_callback(channel):
+        print("stop button has been pressed")
+        start = False
+        s.recv(1024)
 
+GPIO.add_event_detect(13, GPIO.FALLING, callback=my_callback, bouncetime=300)
+                
 #Catch CTRL + C
 conn = False	
 s = False
@@ -823,14 +830,15 @@ try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((TCP_IP, TCP_PORT)) #Create the server socket
         s.listen(1) # Start listening on serversocket for open connections
-        
+        conn, addr = s.accept() #Accept a single connection and do stuff with it
+        print 'Connection address:', addr
         while True:
-
-                conn, addr = s.accept() #Accept a single connection and do stuff with it
-                print 'Connection address:', addr
-                sentinal()
-                print("first call")                          
-			
+                print("1st thread started")
+                if stop== True:
+                        start = True
+                while(start== True):
+                        sentinal()
+                	
 except KeyboardInterrupt:
         print 'Closing server...'
 
